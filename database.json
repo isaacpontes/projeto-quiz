@@ -1,0 +1,26 @@
+{
+  "questions": [
+    {
+      "text": "Frase qualquer...",
+      "points": {
+        "fullyDisagree": 2,
+        "partiallyDisagree": 1,
+        "partiallyAgree": 0,
+        "fullyAgree": 3
+      },
+      "id": 1
+    }
+  ],
+  "results": [
+    {
+      "name": "Emma Swan",
+      "description": "Você seria a Emma....",
+      "id": 1
+    },
+    {
+      "name": "Regina",
+      "description": "Você seria a Rainha Má....",
+      "id": 2
+    }
+  ]
+}
