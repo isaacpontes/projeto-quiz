@@ -1,117 +1,95 @@
+import { createQuestion, deleteQuestion, fetchQuestions, fetchResults, updateQuestion } from "./api"
+import { button, div, h3, input, label, option, select } from "./elements"
+
 export async function createEmptyQuestion() {
-  await fetch("http://localhost:3000/questions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: "",
-      points: { "fullyDisagree": null, "partiallyDisagree": null, "fullyAgree": null, "partiallyAgree": null, "dontKnow": null }
-    })
-  })
-  loadQuestionsManager(document.getElementById("questionsManager"))
+  await createQuestion()
+  const questionsManagerElement = document.getElementById("questionsManager")
+  loadQuestionsManager(questionsManagerElement)
 }
 
 export async function loadQuestionsManager(managerElement) {
   managerElement.innerHTML = ""
-  const questions = await fetch("http://localhost:3000/questions").then((res) => res.json())
-  const results = await fetch("http://localhost:3000/results").then((res) => res.json())
+  const questions = await fetchQuestions()
+  const results = await fetchResults()
 
-  questions.forEach((question) => {
-    const questionForm = document.createElement("form")
-    questionForm.classList.add("questionForm")
+  questions.forEach((question) => createQuestionForm(question, results))
+}
 
-    questionForm.addEventListener("submit", async (ev) => {
-      ev.preventDefault()
+function createQuestionForm(question, results) {
+  const questionForm = document.createElement("form")
+  questionForm.classList.add("questionForm")
 
-      const formData = new FormData(ev.target)
-      const text = formData.get("text")
-      const points = {}
-      points.fullyDisagree = +formData.get("fullyDisagree")
-      points.partiallyDisagree = +formData.get("partiallyDisagree")
-      points.dontKnow = +formData.get("dontKnow")
-      points.partiallyAgree = +formData.get("partiallyAgree")
-      points.fullyAgree = +formData.get("fullyAgree")
+  questionForm.addEventListener("submit", async (ev) => {
+    ev.preventDefault()
 
-      await fetch(`http://localhost:3000/questions/${question.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, points })
-      })
-      alert("Pergunta atualizada com sucesso!")
-    })
+    const formData = new FormData(ev.target)
+    const text = formData.get("text")
+    const points = {}
+    points.fullyDisagree = +formData.get("fullyDisagree")
+    points.partiallyDisagree = +formData.get("partiallyDisagree")
+    points.dontKnow = +formData.get("dontKnow")
+    points.partiallyAgree = +formData.get("partiallyAgree")
+    points.fullyAgree = +formData.get("fullyAgree")
 
-    const questionFormTitle = createQuestionTitleElement(question)
-    const questionTextLabel = createQuestionTextLabel(question)
-    const questionTextInput = createQuestionTextInput(question)
-    const fullyDisagreeDiv = createFullyDisagreeSelect(question, results)
-    const partiallyDisagreeDiv = createPartiallyDisagreeSelect(question, results)
-    const fullyAgreeDiv = createFullyAgreeSelect(question, results)
-    const partiallyAgreeDiv = createPartiallyAgreeSelect(question, results)
-    const dontKnowDiv = createDontKnowSelect(question, results)
-
-    const buttonGroup = document.createElement("div")
-    buttonGroup.classList.add("button-group")
-
-    const submitBtn = document.createElement("button")
-    submitBtn.type = "submit"
-    submitBtn.textContent = "Salvar"
-
-    const deleteBtn = document.createElement("button")
-    deleteBtn.type = "button"
-    deleteBtn.textContent = "Excluir Pergunta"
-    deleteBtn.addEventListener("click", async () => {
-      await fetch(`http://localhost:3000/questions/${question.id}`, { method: "DELETE" })
-      questionForm.remove()
-    })
-
-    buttonGroup.append(submitBtn, deleteBtn)
-
-    questionForm.append(questionFormTitle, questionTextLabel, questionTextInput, fullyDisagreeDiv, partiallyDisagreeDiv, dontKnowDiv, partiallyAgreeDiv, fullyAgreeDiv, buttonGroup)
-    managerElement.append(questionForm)
+    await updateQuestion(question.id, text, points)
+    alert("Pergunta atualizada com sucesso!")
   })
+
+  const questionFormTitle = h3(`Pergunta ${question.id}`)
+  const questionTextLabel = label("Texto da Pergunta:", `question-${question.id}-text`)
+  const questionTextInput = input("text", {
+    id: `question-${question.id}-text`,
+    name: "text",
+    value: question.text
+  })
+
+  const fullyDisagreeDiv = createFullyDisagreeField(question, results)
+  const partiallyDisagreeDiv = createPartiallyDisagreeField(question, results)
+  const fullyAgreeDiv = createFullyAgreeField(question, results)
+  const partiallyAgreeDiv = createPartiallyAgreeField(question, results)
+  const dontKnowDiv = createDontKnowField(question, results)
+
+  const buttonGroup = div({ className: "button-group" })
+
+  const submitBtn = button("Salvar", { type: "submit" })
+
+  const deleteBtn = button("Excluir Pergunta", {
+    onClick: async () => {
+      await deleteQuestion(question.id)
+      questionForm.remove()
+    }
+  })
+
+  buttonGroup.append(submitBtn, deleteBtn)
+
+  questionForm.append(
+    questionFormTitle,
+    questionTextLabel,
+    questionTextInput,
+    fullyDisagreeDiv,
+    partiallyDisagreeDiv,
+    dontKnowDiv,
+    partiallyAgreeDiv,
+    fullyAgreeDiv,
+    buttonGroup
+  )
+  managerElement.append(questionForm)
 }
 
-function createQuestionTitleElement(question) {
-  const questionFormTitle = document.createElement("h3")
-  questionFormTitle.textContent = `Pergunta ${question.id}`
-  return questionFormTitle
-}
+function createFullyDisagreeField(question, results) {
+  const fullyDisagreeDiv = div({ className: "inline-block" })
 
-function createQuestionTextLabel(question) {
-  const questionTextLabel = document.createElement("label")
-  questionTextLabel.htmlFor = `question-${question.id}-text`
-  questionTextLabel.textContent = "Texto da Pergunta:"
-  return questionTextLabel
-}
+  const fullyDisagreeLabel = label("Discordo Completamente", `question-${question.id}-fully-disagree`)
+  const fullyDisagreeSelect = select(`question-${question.id}-fully-disagree`, "fullyDisagree")
 
-function createQuestionTextInput(question) {
-  const questionTextInput = document.createElement("input")
-  questionTextInput.id = `question-${question.id}-text`
-  questionTextInput.name = "text"
-  questionTextInput.type = "text"
-  questionTextInput.value = question.text
-  return questionTextInput
-}
-
-function createFullyDisagreeSelect(question, results) {
-  const fullyDisagreeDiv = document.createElement("div")
-  fullyDisagreeDiv.classList.add("inline-block")
-
-  const fullyDisagreeLabel = document.createElement("label")
-  fullyDisagreeLabel.textContent = "Discordo Completamente"
-  fullyDisagreeLabel.htmlFor = `question-${question.id}-fully-disagree`
-
-  const fullyDisagreeSelect = document.createElement("select")
-  fullyDisagreeSelect.id = `question-${question.id}-fully-disagree`
-  fullyDisagreeSelect.name = "fullyDisagree"
-
-  const defaultOption = createDefaultOption()
+  const defaultOption = option()
   fullyDisagreeSelect.options.add(defaultOption)
 
   results.forEach((result) => {
-    const resultOption = document.createElement("option")
-    resultOption.textContent = result.name
-    resultOption.value = result.id
-    resultOption.selected = question.points.fullyDisagree === result.id
+    const resultOption = option(result.name, {
+      value: result.id,
+      selected: question.points.fullyDisagree === result.id
+    })
     fullyDisagreeSelect.options.add(resultOption)
   })
 
@@ -120,26 +98,20 @@ function createFullyDisagreeSelect(question, results) {
   return fullyDisagreeDiv
 }
 
-function createPartiallyDisagreeSelect(question, results) {
-  const partiallyDisagreeDiv = document.createElement("div")
-  partiallyDisagreeDiv.classList.add("inline-block")
+function createPartiallyDisagreeField(question, results) {
+  const partiallyDisagreeDiv = div({ className: "inline-block" })
 
-  const partiallyDisagreeLabel = document.createElement("label")
-  partiallyDisagreeLabel.textContent = "Discordo Parcialmente"
-  partiallyDisagreeLabel.htmlFor = `question-${question.id}-partially-disagree`
+  const partiallyDisagreeLabel = label("Discordo Parcialmente", `question-${question.id}-partially-disagree`)
+  const partiallyDisagreeSelect = select(`question-${question.id}-partially-disagree`, "partiallyDisagree")
 
-  const partiallyDisagreeSelect = document.createElement("select")
-  partiallyDisagreeSelect.id = `question-${question.id}-partially-disagree`
-  partiallyDisagreeSelect.name = "partiallyDisagree"
-
-  const defaultOption = createDefaultOption()
+  const defaultOption = option("Selecione...", { selected: true, disabled: true })
   partiallyDisagreeSelect.options.add(defaultOption)
 
   results.forEach((result) => {
-    const resultOption = document.createElement("option")
-    resultOption.textContent = result.name
-    resultOption.value = result.id
-    resultOption.selected = question.points.partiallyDisagree === result.id
+    const resultOption = option(result.name, {
+      value: result.id,
+      selected: question.points.partiallyDisagree === result.id
+    })
     partiallyDisagreeSelect.options.add(resultOption)
   })
 
@@ -148,26 +120,20 @@ function createPartiallyDisagreeSelect(question, results) {
   return partiallyDisagreeDiv
 }
 
-function createPartiallyAgreeSelect(question, results) {
-  const partiallyAgreeDiv = document.createElement("div")
-  partiallyAgreeDiv.classList.add("inline-block")
+function createPartiallyAgreeField(question, results) {
+  const partiallyAgreeDiv = div({ className: "inline-block" })
 
-  const partiallyAgreeLabel = document.createElement("label")
-  partiallyAgreeLabel.textContent = "Concordo Parcialmente"
-  partiallyAgreeLabel.htmlFor = `question-${question.id}-partially-agree`
+  const partiallyAgreeLabel = label("Concordo Parcialmente", `question-${question.id}-partially-agree`)
+  const partiallyAgreeSelect = select(`question-${question.id}-partially-agree`, "partiallyAgree")
 
-  const partiallyAgreeSelect = document.createElement("select")
-  partiallyAgreeSelect.id = `question-${question.id}-partially-agree`
-  partiallyAgreeSelect.name = "partiallyAgree"
-
-  const defaultOption = createDefaultOption()
+  const defaultOption = option("Selecione...", { selected: true, disabled: true })
   partiallyAgreeSelect.options.add(defaultOption)
 
   results.forEach((result) => {
-    const resultOption = document.createElement("option")
-    resultOption.textContent = result.name
-    resultOption.value = result.id
-    resultOption.selected = question.points.partiallyAgree === result.id
+    const resultOption = option(result.name, {
+      value: result.id,
+      selected: question.points.partiallyAgree === result.id
+    })
     partiallyAgreeSelect.options.add(resultOption)
   })
 
@@ -176,66 +142,47 @@ function createPartiallyAgreeSelect(question, results) {
   return partiallyAgreeDiv
 }
 
-function createFullyAgreeSelect(question, results) {
-  const fullyAgreeDiv = document.createElement("div")
-  fullyAgreeDiv.classList.add("inline-block")
+function createFullyAgreeField(question, results) {
+  const fullyAgreeDiv = div({ className: "inline-block" })
 
-  const fullyAgreeLabel = document.createElement("label")
-  fullyAgreeLabel.textContent = "Concordo Completamente"
-  fullyAgreeLabel.htmlFor = `question-${question.id}-fully-agree`
+  const fullyAgreeLabel = label("Concordo Completamente", `question-${question.id}-fully-agree`)
+  const fullyAgreeSelect = select(`question-${question.id}-fully-agree`, "fullyAgree")
 
-  const fullyAgreeSelect = document.createElement("select")
-  fullyAgreeSelect.id = `question-${question.id}-fully-agree`
-  fullyAgreeSelect.name = "fullyAgree"
-
-  const defaultOption = createDefaultOption()
+  const defaultOption = option("Selecione...", { selected: true, disabled: true })
   fullyAgreeSelect.options.add(defaultOption)
 
   results.forEach((result) => {
-    const resultOption = document.createElement("option")
-    resultOption.textContent = result.name
-    resultOption.value = result.id
-    resultOption.selected = question.points.fullyAgree === result.id
+    const resultOption = option(result.name, {
+      value: result.id,
+      selected: question.points.fullyAgree === result.id
+    })
     fullyAgreeSelect.options.add(resultOption)
   })
+
 
   fullyAgreeDiv.append(fullyAgreeLabel, fullyAgreeSelect)
 
   return fullyAgreeDiv
 }
 
-function createDontKnowSelect(question, results) {
-  const dontKnowDiv = document.createElement("div")
-  dontKnowDiv.classList.add("inline-block")
+function createDontKnowField(question, results) {
+  const dontKnowDiv = div({ className: "inline-block" })
 
-  const dontKnowLabel = document.createElement("label")
-  dontKnowLabel.textContent = "Não Sei"
-  dontKnowLabel.htmlFor = `question-${question.id}-dont-know`
+  const dontKnowLabel = label("Não Sei", `question-${question.id}-dont-know`)
+  const dontKnowSelect = select(`question-${question.id}-dont-know`, "dontKnow")
 
-  const dontKnowSelect = document.createElement("select")
-  dontKnowSelect.id = `question-${question.id}-dont-know`
-  dontKnowSelect.name = "dontKnow"
-
-  const defaultOption = createDefaultOption()
+  const defaultOption = option("Selecione...", { selected: true, disabled: true })
   dontKnowSelect.options.add(defaultOption)
 
   results.forEach((result) => {
-    const resultOption = document.createElement("option")
-    resultOption.textContent = result.name
-    resultOption.value = result.id
-    resultOption.selected = question.points.dontKnow === result.id
+    const resultOption = option(result.name, {
+      value: result.id,
+      selected: question.points.dontKnow === result.id
+    })
     dontKnowSelect.options.add(resultOption)
   })
 
   dontKnowDiv.append(dontKnowLabel, dontKnowSelect)
 
   return dontKnowDiv
-}
-
-function createDefaultOption() {
-  const defaultOption = document.createElement("option")
-  defaultOption.textContent = "Selecione..."
-  defaultOption.selected = true
-  defaultOption.disabled = true
-  return defaultOption
 }

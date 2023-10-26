@@ -1,41 +1,36 @@
+import { fetchQuestions } from "./api"
+import { button, div, h2 } from "./elements"
+
 export async function loadQuestions() {
   const appElement = document.getElementById("app")
-  const questions = await fetch("http://localhost:3000/questions").then((res) => res.json())
+  const questions = await fetchQuestions()
   const answers = questions.map((question) => ({ questionId: question.id, answer: null }))
 
   questions.forEach((question, index) => {
-    const questionContainer = document.createElement("div")
-    questionContainer.classList = "question"
+    const questionContainer = div({ className: "question" })
 
-    const textEl = document.createElement("h2")
-    textEl.textContent = question.text
+    const textElement = h2(question.text)
 
-    const alternatives = document.createElement("div")
+    const alternatives = div()
     const alternativeBtns = createAlternativeBtns(question, answers)
     alternatives.append(...alternativeBtns)
 
     if (index > 0) {
-      const goBackBtn = document.createElement("button")
-      goBackBtn.textContent = "Voltar à Pergunta Anterior"
-      goBackBtn.addEventListener("click", () => {
-        window.scrollBy({ top: -document.querySelector(".question").scrollHeight, behavior: "smooth" })
-      })
+      const goBackBtn = button("Voltar à Pergunta Anterior", { onClick: scrollToPreviousQuestion })
       questionContainer.appendChild(goBackBtn)
     }
 
-    questionContainer.append(textEl, alternatives)
+    questionContainer.append(textElement, alternatives)
     appElement.append(questionContainer)
   })
 
-  const finishBtnContainer = document.createElement("div")
-  finishBtnContainer.className = "finish-btn-container"
-
-  const finishBtn = document.createElement("button")
-  finishBtn.textContent = "Ver meu resultado!"
-  finishBtn.className = "finish-btn"
-  finishBtn.addEventListener("click", async () => {
-    const result = await calculateResults(questions, answers)
-    appElement.innerHTML = `<div class="result"><h2>Seu resultado foi: ${result.name}!</h2><p>${result.description}</p></div>`
+  const finishBtnContainer = div({ className: "finish-btn-container" })
+  const finishBtn = button("Ver meu resultado!", {
+    className: "finish-btn",
+    onClick: async () => {
+      const result = await calculateResults(questions, answers)
+      appElement.innerHTML = `<div class="result"><h2>Seu resultado foi: ${result.name}!</h2><p>${result.description}</p></div>`
+    }
   })
 
   finishBtnContainer.append(finishBtn)
@@ -48,7 +43,6 @@ async function calculateResults(questions, answers) {
   for (let i = 0; i < questions.length; i++) {
     const question = questions[i]
     const answer = answers[i]
-
     results.push(question.points[answer.answer])
   }
 
@@ -70,46 +64,46 @@ async function calculateResults(questions, answers) {
 }
 
 function createAlternativeBtns(question, answers) {
-  const fullyDisagreeBtn = document.createElement("button")
-  fullyDisagreeBtn.textContent = "Discordo Completamente"
-  fullyDisagreeBtn.classList.add("inline-block")
-  fullyDisagreeBtn.addEventListener("click", handleSelectAlternative)
+  const fullyDisagreeBtn = button("Discordo Completamente", {
+    className: "inline-block",
+    onClick: handleSelectAlternative
+  })
   fullyDisagreeBtn.addEventListener("click", () => {
     const currentAnswer = answers.find((answer) => answer.questionId === question.id)
     currentAnswer.answer = "fullyDisagree"
   })
 
-  const partiallyDisagreeBtn = document.createElement("button")
-  partiallyDisagreeBtn.textContent = "Discordo Parcialmente"
-  partiallyDisagreeBtn.classList.add("inline-block")
-  partiallyDisagreeBtn.addEventListener("click", handleSelectAlternative)
+  const partiallyDisagreeBtn = button("Discordo Parcialmente", {
+    className: "inline-block",
+    onClick: handleSelectAlternative
+  })
   partiallyDisagreeBtn.addEventListener("click", () => {
     const currentAnswer = answers.find((answer) => answer.questionId === question.id)
     currentAnswer.answer = "partiallyDisagree"
   })
 
-  const dontKnowBtn = document.createElement("button")
-  dontKnowBtn.textContent = "Não sei"
-  dontKnowBtn.classList.add("inline-block")
-  dontKnowBtn.addEventListener("click", handleSelectAlternative)
+  const dontKnowBtn = button("Não sei", {
+    className: "inline-block",
+    onClick: handleSelectAlternative
+  })
   dontKnowBtn.addEventListener("click", () => {
     const currentAnswer = answers.find((answer) => answer.questionId === question.id)
     currentAnswer.answer = "dontKnow"
   })
 
-  const partiallyAgreeBtn = document.createElement("button")
-  partiallyAgreeBtn.textContent = "Concordo Parcialmente"
-  partiallyAgreeBtn.classList.add("inline-block")
-  partiallyAgreeBtn.addEventListener("click", handleSelectAlternative)
+  const partiallyAgreeBtn = button("Concordo Parcialmente", {
+    className: "inline-block",
+    onClick: handleSelectAlternative
+  })
   partiallyAgreeBtn.addEventListener("click", () => {
     const currentAnswer = answers.find((answer) => answer.questionId === question.id)
     currentAnswer.answer = "partiallyAgree"
   })
 
-  const fullyAgreeBtn = document.createElement("button")
-  fullyAgreeBtn.textContent = "Concordo Completamente"
-  fullyAgreeBtn.classList.add("inline-block")
-  fullyAgreeBtn.addEventListener("click", handleSelectAlternative)
+  const fullyAgreeBtn = button("Concordo Completamente", {
+    className: "inline-block",
+    onClick: handleSelectAlternative
+  })
   fullyAgreeBtn.addEventListener("click", () => {
     const currentAnswer = answers.find((answer) => answer.questionId === question.id)
     currentAnswer.answer = "fullyAgree"
@@ -124,7 +118,13 @@ function handleSelectAlternative(ev) {
   })
   ev.target.classList.add("selected")
 
-  setTimeout(() => {
-    window.scrollBy({ top: document.querySelector(".question").scrollHeight, behavior: "smooth" })
-  }, 250)
+  setTimeout(scrollToNextQuestion, 250)
+}
+
+function scrollToNextQuestion() {
+  window.scrollBy({ top: document.querySelector(".question").scrollHeight, behavior: "smooth" })
+}
+
+function scrollToPreviousQuestion() {
+  window.scrollBy({ top: -document.querySelector(".question").scrollHeight, behavior: "smooth" })
 }
