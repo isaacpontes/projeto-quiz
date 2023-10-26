@@ -1,23 +1,3 @@
-export async function loadQuestions() {
-  const response = await fetch("http://localhost:3000/questions")
-  const data = await response.json()
-
-  data.forEach((question) => {
-    const textEl = document.createElement("h2")
-    textEl.textContent = question.text
-
-    const alternatives = document.createElement("ol")
-
-    question.alternatives.forEach((alternative) => {
-      const li = document.createElement("li")
-      li.textContent = alternative
-      alternatives.appendChild(li)
-    })
-
-    document.getElementById("app").append(textEl, alternatives)
-  })
-}
-
 export async function createEmptyQuestion() {
   await fetch("http://localhost:3000/questions", {
     method: "POST",
@@ -47,6 +27,7 @@ export async function loadQuestionsManager(managerElement) {
       const points = {}
       points.fullyDisagree = +formData.get("fullyDisagree")
       points.partiallyDisagree = +formData.get("partiallyDisagree")
+      points.dontKnow = +formData.get("dontKnow")
       points.partiallyAgree = +formData.get("partiallyAgree")
       points.fullyAgree = +formData.get("fullyAgree")
 
@@ -65,6 +46,7 @@ export async function loadQuestionsManager(managerElement) {
     const partiallyDisagreeDiv = createPartiallyDisagreeSelect(question, results)
     const fullyAgreeDiv = createFullyAgreeSelect(question, results)
     const partiallyAgreeDiv = createPartiallyAgreeSelect(question, results)
+    const dontKnowDiv = createDontKnowSelect(question, results)
 
     const buttonGroup = document.createElement("div")
     buttonGroup.classList.add("button-group")
@@ -83,7 +65,7 @@ export async function loadQuestionsManager(managerElement) {
 
     buttonGroup.append(submitBtn, deleteBtn)
 
-    questionForm.append(questionFormTitle, questionTextLabel, questionTextInput, fullyDisagreeDiv, partiallyDisagreeDiv, partiallyAgreeDiv, fullyAgreeDiv, buttonGroup)
+    questionForm.append(questionFormTitle, questionTextLabel, questionTextInput, fullyDisagreeDiv, partiallyDisagreeDiv, dontKnowDiv, partiallyAgreeDiv, fullyAgreeDiv, buttonGroup)
     managerElement.append(questionForm)
   })
 }
@@ -220,6 +202,34 @@ function createFullyAgreeSelect(question, results) {
   fullyAgreeDiv.append(fullyAgreeLabel, fullyAgreeSelect)
 
   return fullyAgreeDiv
+}
+
+function createDontKnowSelect(question, results) {
+  const dontKnowDiv = document.createElement("div")
+  dontKnowDiv.classList.add("inline-block")
+
+  const dontKnowLabel = document.createElement("label")
+  dontKnowLabel.textContent = "Não Sei"
+  dontKnowLabel.htmlFor = `question-${question.id}-dont-know`
+
+  const dontKnowSelect = document.createElement("select")
+  dontKnowSelect.id = `question-${question.id}-dont-know`
+  dontKnowSelect.name = "dontKnow"
+
+  const defaultOption = createDefaultOption()
+  dontKnowSelect.options.add(defaultOption)
+
+  results.forEach((result) => {
+    const resultOption = document.createElement("option")
+    resultOption.textContent = result.name
+    resultOption.value = result.id
+    resultOption.selected = question.points.dontKnow === result.id
+    dontKnowSelect.options.add(resultOption)
+  })
+
+  dontKnowDiv.append(dontKnowLabel, dontKnowSelect)
+
+  return dontKnowDiv
 }
 
 function createDefaultOption() {

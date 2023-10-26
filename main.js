@@ -1,4 +1,5 @@
 import { createEmptyQuestion, loadQuestionsManager } from './src/questions'
+import { loadQuestions } from './src/quiz'
 import { addSubmitNewResultListener, loadResults } from './src/results'
 import './style.css'
 

@@ -1,5 +1,7 @@
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 :root {
@@ -18,56 +20,44 @@
   -webkit-text-size-adjust: 100%;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  padding: 2rem;
+header {
+  background-color: #1a1a1a;
+  position: sticky;
+  top: 0;
+  height: 3rem;
+  width: 100%;
 }
 
 h1 {
-  flex-shrink: 1;
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 2rem;
+  text-align: center;
 }
 
-ol {
-  list-style: lower-alpha;
+body {
+  overflow: hidden;
 }
 
 #app {
-  max-width: 1280px;
+  min-height: calc(100vh - 3rem);
+  text-align: center;
+  width: 100%;
+}
+
+.question,
+.finish-btn-container,
+.result {
+  display: grid;
+  place-content: center;
+  height: calc(100vh - 3rem);
+}
+
+.question > button {
   margin: 0 auto;
-  padding: 2rem;
+  width: fit-content;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vanilla:hover {
-  filter: drop-shadow(0 0 2em #f7df1eaa);
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.question h2 {
+  margin: 4rem 0;
 }
 
 button {
@@ -88,12 +78,30 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+button.selected {
+  background-color: #646cff;
+}
+
+.finish-btn {
+  background-color: #1c7031;
+  display: block;
+  font-size: 1.5rem;
+  margin: 2rem auto 0 auto;
+  text-transform: capitalize;
+}
+
+.finish-btn:hover {
+  filter: brightness(0.9);
+  border-color: #1c7031;
+}
 
 .admin {
   display: flex;
   justify-content: space-between;
   gap: 2rem;
   flex-wrap: wrap;
+  padding: 0 2rem;
+  min-height: calc(100vh - 9rem);
   width: 100%;
 }
 
@@ -121,7 +129,7 @@ button:focus-visible {
 .questionForm > textarea,
 .questionForm select {
   border: none;
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   padding: 1rem;
   width: 100%;
 }
@@ -152,13 +160,20 @@ button:focus-visible {
 
 .questionForm {
   background-color: #1a1a1a;
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   margin: 1rem 0;
   padding: 1rem;
 }
 
 footer {
-  padding-top: 4rem;
+  background-color: #1a1a1a;
+  display: grid;
+  place-content: center;
+  height: 3rem;
+  position: fixed;
+  bottom: 0;
+  text-align: center;
+  width: 100%;
 }
 
 @media (prefers-color-scheme: light) {
